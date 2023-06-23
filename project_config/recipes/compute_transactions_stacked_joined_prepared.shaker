@@ -1,0 +1,277 @@
+{
+  "columnsSelection": {
+    "mode": "ALL"
+  },
+  "explorationSampling": {
+    "_refreshTrigger": 0,
+    "selection": {
+      "filter": {
+        "distinct": false,
+        "enabled": false
+      },
+      "latestPartitionsN": 1,
+      "maxRecords": 10000,
+      "maxRecordsForDisplay": -1,
+      "ordering": {
+        "rules": [],
+        "enabled": false
+      },
+      "withinFirstN": -1,
+      "partitionSelectionMethod": "ALL",
+      "maxStoredBytes": 104857600,
+      "targetRatio": 0.02,
+      "maxReadUncompressedBytes": -1,
+      "samplingMethod": "HEAD_SEQUENTIAL",
+      "timeout": -1
+    },
+    "autoRefreshSample": false
+  },
+  "explorationFilters": [],
+  "columnUseScientificNotationByName": {},
+  "origin": "PREPARE_RECIPE",
+  "exploreUIParams": {
+    "autoRefresh": true
+  },
+  "steps": [
+    {
+      "preview": false,
+      "name": "Dates",
+      "metaType": "GROUP",
+      "disabled": false,
+      "steps": [
+        {
+          "preview": false,
+          "metaType": "PROCESSOR",
+          "disabled": false,
+          "type": "DateParser",
+          "params": {
+            "outCol": "purchase_date_parsed",
+            "formats": [
+              "yyyy-MM-dd HH:mm:ss"
+            ],
+            "columns": [
+              "purchase_date"
+            ],
+            "timezone_id": "UTC",
+            "appliesTo": "SINGLE_COLUMN",
+            "lang": "auto"
+          },
+          "alwaysShowComment": false
+        },
+        {
+          "preview": false,
+          "metaType": "PROCESSOR",
+          "disabled": false,
+          "type": "DateParser",
+          "params": {
+            "outCol": "card_first_active_month_parsed",
+            "formats": [
+              "yyyy-MM"
+            ],
+            "columns": [
+              "card_first_active_month"
+            ],
+            "timezone_id": "UTC",
+            "appliesTo": "SINGLE_COLUMN",
+            "lang": "auto"
+          },
+          "alwaysShowComment": false
+        },
+        {
+          "preview": false,
+          "metaType": "PROCESSOR",
+          "disabled": false,
+          "type": "DateComponentsExtractor",
+          "params": {
+            "outMonthColumn": "purchase_date_parsed_month",
+            "outHourColumn": "purchase_date_parsed_hour",
+            "outYearColumn": "purchase_date_parsed_year",
+            "column": "purchase_date_parsed",
+            "outDayOfWeekColumn": "",
+            "timezone_id": "UTC",
+            "outDayColumn": "purchase_date_parsed_day"
+          },
+          "alwaysShowComment": false
+        },
+        {
+          "preview": false,
+          "metaType": "PROCESSOR",
+          "disabled": false,
+          "type": "HolidaysComputer",
+          "params": {
+            "flagWeekends": true,
+            "inCol": "purchase_date_parsed",
+            "calendar_id": "FR",
+            "flagBankHolidays": false,
+            "extractReasons": false,
+            "extractZones": false,
+            "timezone_id": "use_preferred_timezone",
+            "flagSchoolHolidays": false,
+            "outColPrefix": "buy_weekend"
+          },
+          "alwaysShowComment": false
+        },
+        {
+          "preview": false,
+          "metaType": "PROCESSOR",
+          "disabled": false,
+          "type": "DateDifference",
+          "params": {
+            "output": "days_active",
+            "input2": "purchase_date_parsed",
+            "outputUnit": "DAYS",
+            "input1": "card_first_active_month_parsed",
+            "compareTo": "COLUMN",
+            "reverse": false
+          },
+          "alwaysShowComment": false
+        }
+      ],
+      "alwaysShowComment": false
+    },
+    {
+      "preview": false,
+      "name": "Geography",
+      "metaType": "GROUP",
+      "disabled": false,
+      "steps": [
+        {
+          "preview": false,
+          "metaType": "PROCESSOR",
+          "disabled": false,
+          "type": "GeoPointCreator",
+          "params": {
+            "out_column": "marchand_location",
+            "lat_column": "merchant_latitude",
+            "lon_column": "merchant_longitude"
+          },
+          "alwaysShowComment": false
+        },
+        {
+          "preview": false,
+          "metaType": "PROCESSOR",
+          "disabled": false,
+          "type": "GeoPointCreator",
+          "params": {
+            "out_column": "cardholder_location",
+            "lat_column": "card_latitude",
+            "lon_column": "card_longitude"
+          },
+          "alwaysShowComment": false
+        },
+        {
+          "preview": false,
+          "metaType": "PROCESSOR",
+          "disabled": false,
+          "type": "CityLevelReverseGeocoder",
+          "params": {
+            "doOutputBoundaries": false,
+            "l4OutCol": "cardholder_state",
+            "inputCol": "cardholder_location"
+          },
+          "alwaysShowComment": false
+        },
+        {
+          "preview": false,
+          "metaType": "PROCESSOR",
+          "disabled": false,
+          "type": "CityLevelReverseGeocoder",
+          "params": {
+            "doOutputBoundaries": false,
+            "l4OutCol": "marchand_state",
+            "l2OutCol": "",
+            "inputCol": "marchand_location"
+          },
+          "alwaysShowComment": false
+        },
+        {
+          "preview": false,
+          "metaType": "PROCESSOR",
+          "disabled": false,
+          "type": "GeoDistanceProcessor",
+          "params": {
+            "output": "marchand_cardholder_distance",
+            "input2": "marchand_location",
+            "outputUnit": "KILOMETERS",
+            "input1": "cardholder_location",
+            "compareTo": "COLUMN"
+          },
+          "alwaysShowComment": false
+        }
+      ],
+      "alwaysShowComment": false
+    }
+  ],
+  "maxProcessedMemTableBytes": -1,
+  "previewMode": "ALL_ROWS",
+  "vizSampling": {
+    "_refreshTrigger": 0,
+    "selection": {
+      "useMemTable": false,
+      "filter": {
+        "distinct": false,
+        "enabled": false
+      },
+      "latestPartitionsN": 1,
+      "maxRecords": -1,
+      "ordering": {
+        "rules": [],
+        "enabled": false
+      },
+      "withinFirstN": -1,
+      "partitionSelectionMethod": "ALL",
+      "targetRatio": 0.02,
+      "maxReadUncompressedBytes": -1,
+      "samplingMethod": "FULL"
+    },
+    "autoRefreshSample": false
+  },
+  "analysisColumnData": {},
+  "columnWidthsByName": {
+    "cardholder_state": 135,
+    "merchant_latitude": 143,
+    "purchase_date_parsed_day": 195,
+    "marchand_state_enName": 197,
+    "merchant_id": 127,
+    "reward_program": 155,
+    "card_longitude": 134,
+    "item_category": 113,
+    "subsector_description": 173,
+    "purchase_date_parsed": 190,
+    "internal_card_mapping": 197,
+    "signature_provided": 150,
+    "card_first_active_month_parsed": 260,
+    "fico_score": 100,
+    "purchase_date_parsed_hour": 203,
+    "transaction_id": 120,
+    "holiday_weekend": 128,
+    "card_first_active_month": 188,
+    "days_active": 100,
+    "marchand_location": 143,
+    "card_latitude": 134,
+    "purchase_date_parsed_week": 203,
+    "marchand_state_iso": 150,
+    "merchant_category_id": 165,
+    "marchand_cardholder_distance": 225,
+    "card_id": 120,
+    "merchant_longitude": 150,
+    "purchase_date_parsed_year": 203,
+    "cardholder_state_enName": 188,
+    "purchase_amount": 134,
+    "holiday_bank": 105,
+    "purchase_date_parsed_month": 210,
+    "marchand_state": 148,
+    "purchase_date": 148,
+    "authorized_flag": 128,
+    "age": 100,
+    "buy_weekendweekend": 150,
+    "cardholder_location": 183
+  },
+  "sorting": [],
+  "globalSearchQuery": "",
+  "coloring": {
+    "scheme": "MEANING_AND_STATUS",
+    "individualColumns": [],
+    "valueColoringMode": "HASH"
+  }
+}
